@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>English Test Grade 8 – Semester Ganjil</title>
+<style>
+:root{--bg:#eaf2ff;--c:#fff;--t:#14274e;--m:#5b6b8c;--p:#1f4fd8;--y:#ffc931;--ok:#14883f;--no:#d62839;--b:#cfdcf5}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1730;--c:#16264a;--t:#eef3ff;--m:#9fb0d4;--b:#2c4073}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.55 "Trebuchet MS","Segoe UI",sans-serif;background:var(--bg);color:var(--t);-webkit-user-select:none;user-select:none}
+input{-webkit-user-select:text;user-select:text}
+main,section{max-width:760px;margin:0 auto;padding:14px}
+.card{background:var(--c);border:2px solid var(--b);border-radius:16px;padding:18px;margin:12px 0}
+h1{margin:0 0 4px;font-size:1.7rem}h2{font-size:1.15rem;margin:12px 0}
+.m{color:var(--m)}.sec{font-weight:700;color:var(--p);margin-bottom:8px}
+input{width:100%;padding:12px;margin:6px 0;border:2px solid var(--b);border-radius:10px;font:inherit;background:var(--bg);color:var(--t)}
+button{font:inherit;cursor:pointer}
+.big{background:var(--p);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-weight:700}
+.big:disabled{opacity:.4}
+.txt{background:var(--bg);border-left:6px solid var(--y);padding:10px 14px;border-radius:8px;margin:10px 0}
+.img{text-align:center;margin:10px 0}.img svg{width:100%;max-width:360px;height:auto}
+.op{display:flex;gap:12px;align-items:center;width:100%;text-align:left;margin:8px 0;padding:11px 14px;border:2px solid var(--b);border-radius:12px;background:var(--c);color:var(--t)}
+.op b{background:var(--bg);border-radius:50%;min-width:30px;height:30px;display:grid;place-items:center}
+.op.on{border-color:var(--p);background:var(--bg)}.op.on b{background:var(--p);color:#fff}
+.op.key{border-color:var(--ok);background:rgba(20,136,63,.14)}
+#bar{display:flex;justify-content:space-between;font-weight:700;padding:6px 4px}
+#tm{background:var(--y);color:#14274e;border-radius:20px;padding:2px 14px}
+#nav{display:flex;justify-content:space-between;gap:8px}
+#nav button{border:2px solid var(--p);background:var(--c);color:var(--p);border-radius:10px;padding:9px 18px;font-weight:700}
+#nav .fin{background:var(--ok);border-color:var(--ok);color:#fff}
+#g{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:12px}
+#g button{border:2px solid var(--b);background:var(--c);color:var(--t);border-radius:8px;padding:6px 0}
+#g .d{background:var(--p);color:#fff;border-color:var(--p)}#g .c{outline:3px solid var(--y)}
+#ov{position:fixed;inset:0;background:rgba(10,20,50,.94);color:#fff;display:grid;place-items:center;text-align:center;padding:24px;z-index:9}
+a{color:var(--p);cursor:pointer;text-decoration:underline}
+.score{font-size:3.2rem;font-weight:800;color:var(--p)}
+textarea{width:100%;height:90px;font:12px monospace;-webkit-user-select:text;user-select:text}
+[hidden]{display:none!important}
+@media print{#bar,button{display:none}}
+</style></head><body>
+
+<main id="home">
+ <div class="card">
+  <h1>📘 English Test – Grade 8</h1>
+  <p class="m">Semester Ganjil · 50 soal pilihan ganda · 60 menit</p>
+  <p>Materi: narrative text, procedure text, simple past tense, poster, prohibition, obligation, dan advice.</p>
+  <input id="nm" placeholder="Nama lengkap" autocomplete="off">
+  <input id="cl" placeholder="Kelas (contoh: 8A)" autocomplete="off">
+  <ul>
+   <li>Ujian berjalan di layar penuh. Jangan pindah tab atau aplikasi.</li>
+   <li>Pindah tab/keluar layar penuh 3 kali: ujian dikumpulkan otomatis.</li>
+   <li>Urutan soal dan pilihan jawaban diacak untuk setiap siswa.</li>
+   <li>Salin, tempel, dan klik kanan dinonaktifkan.</li>
+  </ul>
+  <button class="big" id="go">Mulai ujian</button>
+  <p class="m"><a id="tc">Mode guru: lihat ringkasan soal dan kunci</a></p>
+ </div>
+</main>
+
+<section id="ex" hidden>
+ <div id="bar"><span id="who"></span><span id="tm"></span></div>
+ <div class="card" id="q"></div>
+ <div id="nav"><button id="pv">Sebelumnya</button><button id="nx">Berikutnya</button></div>
+ <div id="g"></div>
+</section>
+
+<section id="res" hidden></section>
+
+<div id="ov" hidden><div><h1 id="ovh">⚠️ Peringatan</h1><p id="ovp"></p><button class="big" id="ovb">Lanjutkan ujian</button></div></div>
+
+<script>
+/* ===== PENGATURAN ===== */
+const SEND_URL="https://script.google.com/macros/s/AKfycbxYbyqMv9398t9L9jbZfLnlW3eniMZOkAv24ZWs2wa7MC8jH7-i2Pb2x1YnfunqLY-gTw/exec";          // isi dengan URL Google Apps Script agar nilai terkirim otomatis ke guru
+const TEACHER_PW="smpn38bdl"; // ganti kata sandi mode guru
+const MINUTES=120, MAXV=3;
+
+/* ===== GAMBAR (SVG) ===== */
+const W='xmlns="http://www.w3.org/2000/svg"';
+const sc=(e,a,b,cap)=>`<svg ${W} viewBox="0 0 360 150"><defs><linearGradient id="g${a.slice(1)}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="360" height="150" rx="14" fill="url(#g${a.slice(1)})"/><text x="180" y="88" font-size="54" text-anchor="middle">${e}</text><text x="180" y="132" font-size="15" font-weight="700" text-anchor="middle" fill="#14274e">${cap}</text></svg>`;
+const sg=(e,k)=>{const x=k=="x";return `<svg ${W} viewBox="0 0 160 160" style="max-width:150px"><circle cx="80" cy="80" r="70" fill="${x?"#fff":"#1f4fd8"}" stroke="${x?"#d62839":"#173aa3"}" stroke-width="12"/><text x="80" y="101" font-size="60" text-anchor="middle">${e}</text>${x?'<line x1="31" y1="129" x2="129" y2="31" stroke="#d62839" stroke-width="12" stroke-linecap="round"/>':""}</svg>`};
+const pz=(t,l,c,e)=>`<svg ${W} viewBox="0 0 360 230"><rect width="360" height="230" rx="12" fill="${c}"/><rect x="10" y="10" width="340" height="210" rx="8" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="8 5"/><text x="180" y="52" font-size="22" font-weight="800" text-anchor="middle" fill="#fff">${t}</text><text x="180" y="100" font-size="38" text-anchor="middle">${e}</text>${l.map((s,i)=>`<text x="180" y="${130+i*22}" font-size="15" font-weight="700" text-anchor="middle" fill="#fff">${s}</text>`).join("")}</svg>`;
+
+/* ===== TEKS BACAAN ===== */
+const P={
+lion:{h:"Text 1 – Narrative: The Lion and the Mouse",i:sc("🦁🌳🐭","#ffe08a","#ffb86b","The Lion and the Mouse"),
+x:`One day, a lion was sleeping under a big tree. A little mouse ran over his body and woke him up. The lion was very angry and caught the mouse. "Please let me go," said the mouse. "One day I will help you." The lion laughed, but he let the mouse go. A few days later, hunters caught the lion in a net. The mouse heard his roar and came quickly. He chewed the net with his small teeth and the lion was free. "Thank you, little friend," said the lion.`},
+wolf:{h:"Text 2 – Narrative: The Boy Who Cried Wolf",i:sc("🐑⛰️🧒🐺","#c9f2c7","#8fd3f4","The Boy Who Cried Wolf"),
+x:`Once upon a time, a shepherd boy looked after sheep on a hill near a village. He felt bored, so he shouted, "Wolf! Wolf!" The villagers ran up the hill, but there was no wolf. The boy laughed at them. He did the same thing the next day. On the third day, a real wolf came. The boy shouted loudly, but nobody came because they did not believe him. The wolf ate many sheep.`},
+tea:{h:"Text 3 – Procedure: How to Make Sweet Tea",i:sc("🍵🫖🍬","#ffd9a8","#ffb4a2","Sweet Tea"),
+x:`<b>Materials:</b> a tea bag, hot water, sugar, a cup.<br><b>Steps:</b><br>First, boil the water.<br>Second, put the tea bag in the cup.<br>Third, pour the hot water into the cup.<br>Then, wait for three minutes and take out the tea bag.<br>Finally, add a spoonful of sugar and stir.`},
+wash:{h:"Text 4 – Procedure: How to Wash Your Hands",i:sc("🧼🙌🚿","#bde0fe","#a2d2ff","Wash Your Hands"),
+x:`1. Wet your hands with clean water.<br>2. Put some soap on your hands.<br>3. Rub your hands for 20 seconds.<br>4. Rinse your hands with clean water.<br>5. Dry your hands with a clean towel.`},
+clean:{h:"Poster 1",i:pz("KEEP OUR SCHOOL CLEAN!",["Throw rubbish in the bin.","Don't litter in the classroom.","Clean school, healthy students!"],"#16a34a","🗑️♻️"),x:""},
+fair:{h:"Poster 2",i:pz("BOOK FAIR 2026",["Date: Saturday, 20 December","Time: 08.00 – 15.00","Place: School Hall","Free entry · Discount up to 50%"],"#7c3aed","📚"),x:""}
+};
+const S1=sg("🚬","x"),S2=sg("📱","x"),S3=sg("🏃","x"),S4=sg("🍔","x"),S5=sg("⛑️","o"),S6=sg("😷","o");
+
+/* ===== BANK SOAL: [bagian, teks, pertanyaan, JAWABAN BENAR, salah, salah, salah, gambar] ===== */
+const D=[
+["N","lion","What is the purpose of the text?","To entertain the readers with a story","To explain how to make something","To forbid people to do something","To give advice about health"],
+["N","lion","Who woke the lion up?","A little mouse","A hunter","A big tree","Another lion"],
+["N","lion",'The word "angry" in the text is closest in meaning to …',"mad","happy","sleepy","afraid"],
+["N","lion","What happened to the lion a few days later?","Hunters caught him in a net.","He ran away from the mouse.","He fell from a tree.","He lost his way."],
+["N","lion","How did the mouse help the lion?","He chewed the net.","He called the hunters.","He roared loudly.","He gave the lion food."],
+["N","lion",'The sentence "One day, a lion was sleeping under a big tree." belongs to the …',"orientation","complication","resolution","re-orientation"],
+["N","wolf","Where did the shepherd boy look after the sheep?","On a hill near a village","In a big forest","In the river","At school"],
+["N","wolf",'Why did the boy shout, "Wolf! Wolf!"?',"He felt bored.","He saw a real wolf.","He was very hungry.","He wanted to catch a wolf."],
+["N","wolf","What happened on the third day?","A real wolf came.","The villagers visited the boy.","The boy went home.","The sheep ran to the village."],
+["N","wolf","Why did nobody come to help the boy on the third day?","They did not believe him.","They were sleeping.","They were afraid of the wolf.","They were at school."],
+["N","wolf","What is the moral value of the story?","Do not lie, or people will not trust you.","Always look after sheep.","Never go to the hill.","Wolves are dangerous animals."],
+["N","wolf","Who is the main character of the story?","The shepherd boy","The wolf","The villagers","The sheep"],
+["T","","Last Sunday, my family ____ to the zoo.","went","go","goes","going"],
+["T","","She ____ her homework yesterday.","finished","finish","finishes","finishing"],
+["T","","We ____ a good movie last night.","watched","watch","watches","watching"],
+["T","","What is the past form of the verb 'buy'?","bought","buyed","boughted","buys"],
+["T","","I ____ my keys yesterday.","didn't find","didn't found","don't find","not found"],
+["T","","____ you visit your grandmother last holiday?","Did","Do","Does","Are"],
+["T","","My father ____ a letter to his friend two days ago.","wrote","write","writes","writed"],
+["T","","Look at the picture. What did the girl do yesterday?","She baked a cake.","She bakes a cake.","She is baking a cake.","She will bake a cake.",sc("👧🎂🍰","#ffd6e0","#ffe8a3","Yesterday")],
+["T","","Look at the picture. Tom ____ from his bike yesterday.","fell","falls","falled","falling",sc("🚲🤕","#d8f3dc","#ffe8a3","Yesterday, Tom ... from his bike.")],
+["T","","Which sentence is correct?","She didn't go to school yesterday.","She didn't went to school yesterday.","She not go to school yesterday.","She doesn't went to school yesterday."],
+["PR","tea","What is the purpose of the text?","To tell how to make something","To tell a past event","To describe a person","To announce an event"],
+["PR","tea","Which of the following is NOT needed to make sweet tea?","Milk","A tea bag","Sugar","Hot water"],
+["PR","tea","What do we do after boiling the water?","Put the tea bag in the cup","Add sugar","Take out the tea bag","Wait for three minutes"],
+["PR","tea","How long should we wait before taking out the tea bag?","Three minutes","One minute","Ten minutes","Thirty seconds"],
+["PR","tea","Which word shows the order of the steps?","Finally","Tea","Spoonful","Water"],
+["PR","tea","What is the last step?","Add sugar and stir","Boil the water","Pour the hot water","Put the tea bag in the cup"],
+["PR","wash","How long should we rub our hands with soap?","20 seconds","2 seconds","5 minutes","1 hour"],
+["PR","wash","What do we use to dry our hands?","A clean towel","Our clothes","Dirty water","Soap"],
+["PO","clean","Who is the poster mainly for?","Everyone at school","Bus drivers","Hospital nurses","Farmers"],
+["PO","clean","What should we do with rubbish?","Throw it in the bin","Leave it in the classroom","Burn it at school","Put it under the desk"],
+["PO","clean","What is the purpose of the poster?","To ask people to keep the school clean","To sell cleaning tools","To announce a school trip","To tell how to make a bin"],
+["PO","fair","When will the book fair be held?","On Saturday, 20 December","On Sunday, 20 December","On Friday, 20 December","On Saturday, 2 December"],
+["PO","fair","Where will the event take place?","In the school hall","In the library","At the field","At the canteen"],
+["PO","fair","Which statement is TRUE according to the poster?","Visitors do not pay to enter.","The fair closes at 08.00.","The discount is 100%.","The fair is held for a week."],
+["PH","","What does the sign mean?","You must not smoke here.","You can smoke here.","You should smoke outside only.","You have to smoke here.",S1],
+["PH","","Where are we most likely to see this sign?","In a library","In a phone shop","In a market","At a bus stop",S2],
+["PH","",'Which sentence has the same meaning as "Don\'t run!"?',"You are not allowed to run.","You must run.","You may run.","You should run.",S3],
+["PH","","Which sentence expresses prohibition?","You mustn't enter the laboratory without permission.","You must wear a helmet.","You should eat vegetables.","You can borrow my pen."],
+["PH","",'"No eating and drinking" means …',"we are not allowed to eat or drink here","we may bring snacks here","we must eat here","we should buy drinks here",S4],
+["OB","","You ____ wear a helmet when you ride a motorbike.","must","mustn't","may not","can",S5],
+["OB","","What does the sign mean?","You have to wear a mask.","You may take off your mask.","You are not allowed to wear a mask.","You should buy a mask.",S6],
+["OB","","Students ____ wear a uniform every Monday.","have to","mustn't","shouldn't","may"],
+["OB","","Which sentence shows obligation?","You must finish the test on time.","You may use my pen.","You can leave now.","You might be late."],
+["OB","","Tomorrow is a holiday. We ____ go to school.","don't have to","must","have to","mustn't"],
+["AD","","You have a headache. You ____ take a rest.","should","mustn't","can't","don't"],
+["AD","","Dina has a bad toothache. What should she do?","She should go to the dentist.","She should eat more candy.","She should play outside.","She should stay up late.",sc("😣🦷","#ffd6e0","#fff1b8","Dina has a toothache.")],
+["AD","","\"I failed the math test.\" – \"You ____ study harder.\"","should","shouldn't","mustn't","can't"],
+["AD","","Which sentence gives advice?","You'd better drink more water.","You must not run here.","You have to wear a helmet.","Don't touch the wire!"]
+];
+const SECS=[["N","Narrative Text"],["T","Simple Past Tense"],["PR","Procedure Text"],["PO","Poster"],["PH","Prohibition"],["OB","Obligation"],["AD","Advice"]];
+
+/* ===== LOGIKA UJIAN ===== */
+const $=s=>document.querySelector(s);
+const sh=a=>{a=[...a];for(let i=a.length;i>1;){const j=Math.random()*i--|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const secName=k=>SECS.find(s=>s[0]==k)[1];
+let S=null,timer,lastV=0;
+const save=()=>{try{localStorage.setItem("ex8",JSON.stringify(S))}catch(e){}};
+const fs=()=>{try{document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}};
+const live=()=>S&&!S.done&&!$("#ex").hidden;
+
+$("#go").onclick=()=>{
+ const n=$("#nm").value.trim(),c=$("#cl").value.trim();
+ if(!n||!c){$("#nm").focus();return}
+ const qs=[];
+ SECS.forEach(([k])=>sh(D.filter(d=>d[0]==k)).forEach(d=>qs.push({d:D.indexOf(d),o:sh([0,1,2,3])})));
+ S={n,c,qs,a:qs.map(()=>-1),i:0,v:0,log:[],end:Date.now()+MINUTES*6e4,done:0};
+ save();fs();run();
+};
+function run(){
+ $("#home").hidden=true;$("#ex").hidden=false;$("#who").textContent=S.n+" · "+S.c;
+ draw();tick();clearInterval(timer);timer=setInterval(tick,1000);
+}
+function draw(){
+ const x=S.qs[S.i],d=D[x.d],p=P[d[1]],img=d[7]||(p&&p.i)||"";
+ $("#q").innerHTML=`<div class="sec">${secName(d[0])} · Soal ${S.i+1} dari ${S.qs.length}</div>`
+  +(p?`<div class="txt"><b>${p.h}</b>${p.x?`<p>${p.x}</p>`:""}</div>`:"")
+  +(img?`<div class="img">${img}</div>`:"")
+  +`<h2>${d[2]}</h2>`
+  +x.o.map((k,j)=>`<button class="op${S.a[S.i]==k?" on":""}" data-k="${k}"><b>${"ABCD"[j]}</b><span>${d[3+k]}</span></button>`).join("");
+ $("#g").innerHTML=S.a.map((a,i)=>`<button class="${a>=0?"d":""}${i==S.i?" c":""}" data-i="${i}">${i+1}</button>`).join("");
+ $("#pv").style.visibility=S.i?"visible":"hidden";
+ const last=S.i==S.qs.length-1,nx=$("#nx");
+ nx.textContent=last?"Selesai & kumpulkan":"Berikutnya";nx.className=last?"fin":"";nx.dataset.sure="";
+}
+$("#q").onclick=e=>{const b=e.target.closest(".op");if(b){S.a[S.i]=+b.dataset.k;save();draw()}};
+$("#g").onclick=e=>{const b=e.target.closest("button");if(b){S.i=+b.dataset.i;save();draw()}};
+$("#pv").onclick=()=>{S.i--;save();draw()};
+$("#nx").onclick=e=>{
+ if(S.i<S.qs.length-1){S.i++;save();draw();return}
+ const left=S.a.filter(a=>a<0).length,b=e.target;
+ if(b.dataset.sure){finish()}else{b.dataset.sure=1;b.textContent=left?`${left} soal kosong. Klik lagi untuk kumpulkan`:"Klik lagi untuk kumpulkan"}
+};
+function tick(){
+ const r=S.end-Date.now();if(r<=0){finish();return}
+ $("#tm").textContent="⏱ "+String(r/6e4|0).padStart(2,"0")+":"+String((r/1e3|0)%60).padStart(2,"0");
+}
+
+/* ===== ANTI KECURANGAN ===== */
+function viol(msg,resume){
+ if(!live())return;
+ const t=Date.now();if(t-lastV<1500)return;lastV=t;
+ S.v++;S.log.push(msg);save();
+ if(S.v>=MAXV){finish();return}
+ $("#ovh").textContent="⚠️ Peringatan "+S.v+" dari "+MAXV;
+ $("#ovp").textContent=msg+". Jika terjadi "+MAXV+" kali, ujian dikumpulkan otomatis.";
+ $("#ov").hidden=false;
+}
+$("#ovb").onclick=()=>{$("#ov").hidden=true;fs()};
+document.addEventListener("visibilitychange",()=>document.hidden&&viol("Kamu berpindah tab atau aplikasi"));
+window.addEventListener("blur",()=>setTimeout(()=>!document.hasFocus()&&viol("Jendela ujian tidak aktif"),400));
+document.addEventListener("fullscreenchange",()=>!document.fullscreenElement&&viol("Kamu keluar dari layar penuh"));
+window.addEventListener("beforeunload",e=>{if(live()){e.preventDefault();e.returnValue=""}});
+["contextmenu","copy","cut","paste","dragstart"].forEach(t=>document.addEventListener(t,e=>e.preventDefault()));
+document.addEventListener("selectstart",e=>{if(e.target.tagName!="INPUT")e.preventDefault()});
+document.addEventListener("keydown",e=>{
+ const k=e.key.toLowerCase();
+ if(k=="f12"||(e.ctrlKey||e.metaKey)&&(["c","v","x","u","s","p","a"].includes(k)||e.shiftKey&&["i","j","c"].includes(k)))e.preventDefault();
+ if(k=="printscreen"){try{navigator.clipboard.writeText("")}catch(x){}viol("Tombol Print Screen ditekan")}
+});
+
+/* ===== HASIL ===== */
+function finish(){
+ if(S.done)return;clearInterval(timer);S.done=1;
+ const sc=S.a.filter(a=>a==0).length;
+ S.r={n:S.n,c:S.c,benar:sc,nilai:sc*2,pelanggaran:S.v,waktu:new Date().toISOString()};
+ save();$("#ov").hidden=true;
+ try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}
+ if(SEND_URL)fetch(SEND_URL,{method:"POST",mode:"no-cors",body:JSON.stringify(S.r)}).catch(()=>{});
+ showRes();
+}
+function showRes(){
+ $("#ex").hidden=true;$("#home").hidden=true;$("#res").hidden=false;
+ const r=S.r,code=btoa(unescape(encodeURIComponent(JSON.stringify(r))));
+ $("#res").innerHTML=`<div class="card" style="text-align:center"><h1>Ujian selesai 🎉</h1><p>${r.n} · ${r.c}</p>
+ <div class="score">${r.nilai}</div><p>${r.benar} dari 50 soal benar${r.pelanggaran?` · ${r.pelanggaran} peringatan`:""}</p>
+ <p class="m">Kirim kode ini ke guru:</p><textarea readonly>${code}</textarea></div>`;
+}
+
+/* ===== MODE GURU: RINGKASAN SOAL + GAMBAR + KUNCI ===== */
+$("#tc").onclick=()=>{
+ if(prompt("Kata sandi guru:")!==TEACHER_PW)return;
+ let prev="";
+ $("#home").innerHTML=`<div class="card"><h1>Ringkasan soal & kunci jawaban</h1><p class="m">50 soal · kunci ditandai hijau ✓ · <a onclick="print()">Cetak</a></p></div>`
+ +D.map((d,n)=>{const p=P[d[1]],img=d[7]||"",show=p&&d[1]!=prev;if(d[1])prev=d[1];else prev="";
+  return `<div class="card"><div class="sec">No. ${n+1} · ${secName(d[0])}</div>`
+  +(show?`<div class="txt"><b>${p.h}</b>${p.x?`<p>${p.x}</p>`:""}<div class="img">${p.i}</div></div>`:(p?`<div class="m">(${p.h})</div>`:""))
+  +(img?`<div class="img">${img}</div>`:"")+`<h2>${d[2]}</h2>`
+  +[3,4,5,6].map((k,j)=>`<div class="op${j?"":" key"}"><b>${"ABCD"[j]}</b><span>${d[k]}${j?"":" ✓"}</span></div>`).join("")+`</div>`}).join("");
+};
+
+/* ===== LANJUTKAN JIKA HALAMAN DIMUAT ULANG ===== */
+try{
+ const s=JSON.parse(localStorage.getItem("ex8")||"null");
+ if(s){S=s;
+  if(S.done)showRes();
+  else{S.v++;S.log.push("Halaman dimuat ulang");save();
+   if(S.v>=MAXV||Date.now()>S.end)finish();
+   else{run();$("#ovh").textContent="Ujian dilanjutkan";$("#ovp").textContent="Halaman sempat dimuat ulang (peringatan "+S.v+" dari "+MAXV+"). Klik untuk masuk layar penuh.";$("#ov").hidden=false}}
+ }
+}catch(e){}
+</script>
+</body></html>
